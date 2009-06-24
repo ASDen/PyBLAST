@@ -72,22 +72,14 @@ class QueryProcessor(object):
             self.HSP[resd]["Place"].append(index)
             return
         HSP={}
-        #print('<start>-------'+str(time.clock()))
-        #for i in list(itertools.product(self.Prtn_Alpha, repeat=self.Residue_Length)):
         for i in self.Try_Gen_Them(resd):
-            #if set(i)&set(resd)==set():
-            #    continue
             sc=self.score(i, resd)
             if sc > self.Threshold:
                 HSP[i]=sc
                 HSP["Place"]=[]
                 HSP["Place"].append(index)
         self.HSP[resd]=HSP
-        #print('<end>---------'+str(time.clock()))
         
     def Generate_Residue_From_Sequence(self,seq):
         [self.Generate_Residue_HSPs(seq[x:x+self.Residue_Length],x) for x in range(len(seq)) if x+3<=len(seq)]
                 
-#myQP = QueryProcessor()
-#myQP.Generate_Residue_From_Sequence("ARPNDFARPLDFA")
-#[print(x,len(myQP.HSP[x]),myQP.HSP[x]) for x in list(myQP.HSP.keys())]
