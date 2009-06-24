@@ -3,6 +3,8 @@ Created on Jun 22, 2009
 
 @author: Administrator
 '''
+from bisect import bisect
+
 from QueryProcessor import QueryProcessor
 from FASTA_Reader import FASTA_Reader
 
@@ -12,9 +14,12 @@ class Hit_Analyzer(object):
     '''
     HPS={}
     TopHits=[]
+    keys=[]
+    Tfill=False
     Request=""
     Residue_Length = 3
     Alignment_Count=25
+
 
     def __init__(selfparams,HPS,Req):
         '''
@@ -23,7 +28,21 @@ class Hit_Analyzer(object):
         selfparams.HPS=HPS
         selfparams.Request=Req
         
-    def Extend_Hit(self,seq,st,resd):
+    def Add_TopHits(self,hit):
+        if self.Tfill and hit[3]<self.keys[0]:return
+        if hit in self.TopHits:return
+        place=bisect(self.keys,hit[3])
+        self.TopHits.insert(len(self.keys)- place, hit)
+        self.keys.insert(place, hit[3])
+        
+        if self.Tfill:
+            self.TopHits.pop(len(self.keys)-1)
+            self.keys.pop(0)
+        
+        if not self.Tfill and len(self.keys)>=self.Alignment_Count:
+            self.Tfill=True
+        
+    def Extend_Hit(self,seq,st,resd,Sind):
         myQP = QueryProcessor()
         Ex_Hits=[]
         for RsSt in self.HPS[resd]["Place"]:
@@ -51,9 +70,8 @@ class Hit_Analyzer(object):
                         Scr+=nScr
                     else:
                         break
-            Ex_Hits.append([RsSt,SqSt,SqEnd,Scr])
-        return Ex_Hits
-        
+            self.Add_TopHits([RsSt,SqSt,SqEnd,Scr,Sind])
+
     def Get_Record_Hits_with_HPS(self,seq,resd,word,index):
         h=[]
         i=0
@@ -61,9 +79,7 @@ class Hit_Analyzer(object):
             i = seq.find(resd,i)
             if  i>=0:
                 """ Extend hit in both ways """
-                for ExHits in self.Extend_Hit(seq, i, word):
-                    ExHits.append(index)
-                    h.append(ExHits)
+                self.Extend_Hit(seq, i, word,index)
                 i+=self.Residue_Length
             else:
                 break
@@ -72,26 +88,27 @@ class Hit_Analyzer(object):
     
     def GetHits(self,seqs):
         for i in range(len(seqs)):
+            if i%100==0:print(i)
             for words in self.HPS:
                 for h in self.HPS[words]:
                     if h=="Place": continue
-                    hit=self.Get_Record_Hits_with_HPS(seqs[i], h,words,i)
-                    if hit != []:
-                        self.TopHits.extend(hit)
+                    self.Get_Record_Hits_with_HPS(seqs[i], h,words,i)
                         
     def Get_Top_Scoring_Alignments(self):
-        self.TopHits.sort(key=lambda x:x[3],reverse=True)
+        self.Hits.sort(key=lambda x:x[3],reverse=True)
         i=0
-        while i<len(self.TopHits)-1:
-            if self.TopHits[i] == self.TopHits[i+1]:
-                del self.TopHits[i]
+        while i<len(self.Hits)-1:
+            if self.Hits[i] == self.Hits[i+1]:
+                del self.Hits[i]
             else:
                 i=i+1
             
-        self.TopHits=self.TopHits[:self.Alignment_Count]
+        self.Hits=self.Hits[:self.Alignment_Count]
 
+print("Started")
 seqs = []
-FR=FASTA_Reader("db.fasta")
+FR=FASTA_Reader("Mus_musculus.NCBIM30.pep.fa")
+#req="AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGCTTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAATATAGGCATAGCGCACAGACAGATAAAAATTACAGAGTACACAACATCCATGAAACGCATTAGCACCACCATTACCACCACCATCACCATTACCACAGGTAACGGTGCGGGCTGACGCGTACAGGAAACACAGAAAAAAGCCCGCACCTGACAGTGCGGGCTTTTTTTTTCGACCAAAGGTAACGAGGTAACAACCATGCGAGTGTTGAAGTTCGGCGGTACATCAGTGGCAAATGCAGAACGTTTTCTGCGTGTTGCCGATATTCTGGAAAGCAATGCCAGGCAGGGGCAGGTGGCCACCGTCCTCTCTGCCCCCGCCAAAATCACCAACCACCTGGTGGCGATGATTGAAAAAACCATTAGCGGCCAGGATGCTTTACCCAATATCAGCGATGCCGAACGTATTTTTGCCGAACTTTT"
 req="HEAAAFLVPVLTHRWNRFAVIVQGEEVTLLMDCEEAAYFMSGLLEEGAGEYDARGYAARTEALAAVVVMDNDSAEVRAYVASADFLDKERAGA"
 while True:
     seq=FR.GetNextSequence()
@@ -99,16 +116,19 @@ while True:
         break
     seqs.append(seq)
 
+print("Sequences Loaded")
+
 import time
 import cProfile
 print(time.clock())
 myQP = QueryProcessor()
-#myQP.Generate_Residue_From_Sequence(req)
-cProfile.run('myQP.Generate_Residue_From_Sequence(req)')
-print(time.clock())
+myQP.Generate_Residue_From_Sequence(req)
+#cProfile.run('myQP.Generate_Residue_From_Sequence(req)')
+print(str(time.clock())+" Query Processed")
 myAnalyzer=Hit_Analyzer(myQP.HSP,req)
-print(time.clock())
 myAnalyzer.GetHits(seqs)
-print(time.clock())
-myAnalyzer.Get_Top_Scoring_Alignments()
+#cProfile.run('myAnalyzer.GetHits(seqs)')
+print(str(time.clock())+"  Hits Retrieved")
+#myAnalyzer.Get_Top_Scoring_Alignments()
 print(myAnalyzer.TopHits)
+print(str(time.clock())+" Alignments Ordered "+str(len(myAnalyzer.TopHits)))
