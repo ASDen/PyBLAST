@@ -66,14 +66,30 @@ class QueryProcessor(object):
             yield resd[0]+i[0]+i[1]
             yield i[0]+resd[1]+i[1]
             
+    def swapP(self,w,p):
+        a=(3-p)%2
+        b=3-(a+p)
+        x=list(w)
+        x[a],x[b]=x[b],x[a]
+        return ''.join(x)
     
     def Generate_Residue_HSPs(self,resd,index):
         if self.HSP.__contains__(resd):
             self.HSP[resd]["Place"].append(index)
             return
-        #if (resd[0],resd[1],resd[2]) in list(itertools.permutations(resd,r=3)):
-        #    for x in self.
-            
+        
+        for h in self.HSP.keys():
+            if (resd[0],resd[1],resd[2]) in list(itertools.permutations(h,r=3)):
+                if resd[0]==h[0]:p=0
+                elif resd[1]==h[1]:p=1
+                else : p=2
+                self.HSP[resd]={}
+                for x in self.HSP[h]:
+                    if x!="Place":
+                        self.HSP[resd][self.swapP(x, p)]=self.HSP[h][x]
+                self.HSP[resd]["Place"]=[index]
+                return
+                        
         HSP={}
         for i in self.Gen_Negihbours(resd):
             sc=self.score(i, resd)
