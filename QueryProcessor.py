@@ -60,7 +60,7 @@ class QueryProcessor(object):
                 ]
         return sc
     
-    def Try_Gen_Them(self,resd):
+    def Gen_Negihbours(self,resd):
         for i in list(itertools.product(self.Prtn_Alpha, repeat=self.Residue_Length-1)):
             yield i[0]+i[1]+resd[2]
             yield resd[0]+i[0]+i[1]
@@ -71,15 +71,17 @@ class QueryProcessor(object):
         if self.HSP.__contains__(resd):
             self.HSP[resd]["Place"].append(index)
             return
+        #if (resd[0],resd[1],resd[2]) in list(itertools.permutations(resd,r=3)):
+        #    for x in self.
+            
         HSP={}
-        for i in self.Try_Gen_Them(resd):
+        for i in self.Gen_Negihbours(resd):
             sc=self.score(i, resd)
             if sc > self.Threshold:
                 HSP[i]=sc
-                HSP["Place"]=[]
-                HSP["Place"].append(index)
+                
+        HSP["Place"]=[index]
         self.HSP[resd]=HSP
         
     def Generate_Residue_From_Sequence(self,seq):
         [self.Generate_Residue_HSPs(seq[x:x+self.Residue_Length],x) for x in range(len(seq)) if x+3<=len(seq)]
-                
