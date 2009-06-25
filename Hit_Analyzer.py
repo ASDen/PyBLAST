@@ -13,6 +13,7 @@ class Hit_Analyzer(object):
     Find and Analyze HSP's hits in db Sequences
     '''
     HPS={}
+    Whash={}
     TopHits=[]
     keys=[]
     Tfill=False
@@ -24,13 +25,14 @@ class Hit_Analyzer(object):
     myQP = QueryProcessor()
 
 
-    def __init__(selfparams,HPS,Req):
+    def __init__(selfparams,HPS,Whash,Req):
         '''
         Constructor
         '''
         selfparams.HPS=HPS
         selfparams.Request=Req
         selfparams.ReqLen=len(Req)-1
+        selfparams.Whash=Whash
         
     def Add_TopHits(self,hit):
         if self.Tfill and hit[3]<self.keys[0]:return
@@ -90,16 +92,23 @@ class Hit_Analyzer(object):
                 i+=self.Residue_Length
             else:
                 break
-        
+    
+    def Get_Recordes_With_Hash(self,seq,index):
+        for x in range(len(seq)-2):
+            st=seq[x:x+3]
+            if st in self.Whash:
+                self.Extend_Hit(seq, x, self.Whash[st],index)
+    
     def GetHits(self,seqs):
         for i in range(len(seqs)):
-            if i%100==0:print(i)
-            #if i>=1000:return
+            if i%400==0:print(i)
+            if i>=4000:return
             self.cSqlLen=len(seqs[i])-1
-            for words in self.HPS:
-                for h in self.HPS[words]:
-                    if h=="Place": continue
-                    self.Get_Record_Hits_with_HPS(seqs[i], h,words,i)
+            self.Get_Recordes_With_Hash(seqs[i], i)
+#            for words in self.HPS:
+#                for h in self.HPS[words]:
+#                    if h=="Place": continue
+#                    self.Get_Record_Hits_with_HPS(seqs[i], h,words,i)
                         
 print("Started")
 seqs = []
@@ -121,9 +130,9 @@ myQP = QueryProcessor()
 myQP.Generate_Residue_From_Sequence(req)
 #cProfile.run('myQP.Generate_Residue_From_Sequence(req)')
 print(str(time.clock())+" Query Processed")
-myAnalyzer=Hit_Analyzer(myQP.HSP,req)
-myAnalyzer.GetHits(seqs)
-#cProfile.run('myAnalyzer.GetHits(seqs)')
+myAnalyzer=Hit_Analyzer(myQP.HSP,myQP.WHash,req)
+#myAnalyzer.GetHits(seqs)
+cProfile.run('myAnalyzer.GetHits(seqs)')
 print(str(time.clock())+"  Hits Retrieved")
 #myAnalyzer.Get_Top_Scoring_Alignments()
 print(myAnalyzer.TopHits)
