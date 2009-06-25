@@ -52,11 +52,13 @@ class Hit_Analyzer(object):
         
     def Extend_Hit(self,seq,st,resd,Sind):
         Ex_Hits=[]
+        Nresd=seq[st:st+self.Residue_Length]
         for RsSt in self.HPS[resd]["Place"]:
             SqSt=st
             SqEnd=st+self.Residue_Length-1
             RsEnd=RsSt+self.Residue_Length-1
-            Scr=self.myQP.score(seq[SqSt:SqEnd+1], resd) ##Wasted  recalculations , should be improved
+            #Scr=self.myQP.score(seq[SqSt:SqEnd+1], resd) ##Wasted  recalculations , should be improved
+            Scr=self.HPS[resd][Nresd]
             """ Left Extension """
             while RsSt>0 and SqSt>0:
                 nScr=self.myQP.score(seq[SqSt-1], self.Request[RsSt-1], 1)
@@ -92,7 +94,7 @@ class Hit_Analyzer(object):
     def GetHits(self,seqs):
         for i in range(len(seqs)):
             if i%100==0:print(i)
-            if i>=1000:return
+            #if i>=1000:return
             self.cSqlLen=len(seqs[i])-1
             for words in self.HPS:
                 for h in self.HPS[words]:
@@ -120,8 +122,8 @@ myQP.Generate_Residue_From_Sequence(req)
 #cProfile.run('myQP.Generate_Residue_From_Sequence(req)')
 print(str(time.clock())+" Query Processed")
 myAnalyzer=Hit_Analyzer(myQP.HSP,req)
-#myAnalyzer.GetHits(seqs)
-cProfile.run('myAnalyzer.GetHits(seqs)')
+myAnalyzer.GetHits(seqs)
+#cProfile.run('myAnalyzer.GetHits(seqs)')
 print(str(time.clock())+"  Hits Retrieved")
 #myAnalyzer.Get_Top_Scoring_Alignments()
 print(myAnalyzer.TopHits)
