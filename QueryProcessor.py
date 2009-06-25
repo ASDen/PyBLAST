@@ -45,6 +45,7 @@ class QueryProcessor(object):
     
     HSP={}
     WHash={}
+    HScr={}
     Threshold = 11
     Residue_Length = 3
     
@@ -56,16 +57,25 @@ class QueryProcessor(object):
         selfparams.Prtn_Alpha_Extra_dict={(selfparams.Prtn_Alpha+selfparams.Prtn_Extra)[i]:i 
                                           for i in list(range(len(selfparams.Prtn_Alpha+selfparams.Prtn_Extra)))}
         
+        for i in selfparams.Prtn_Alpha+selfparams.Prtn_Extra:
+            selfparams.HScr[i]={}
+            for j in selfparams.Prtn_Alpha+selfparams.Prtn_Extra:
+                selfparams.HScr[i][j]=selfparams.blosum62[
+                                                   selfparams.Prtn_Alpha_Extra_dict[i]+
+                                                   selfparams.Prtn_Alpha_Extra_dict[j]*23
+                                                   ]
+        
         selfparams.Prtn_Alpha_length=len(selfparams.Prtn_Alpha)+len(selfparams.Prtn_Extra)    
     
     
     def score(self,resd1,resd2,length=Residue_Length):
         sc=0
         for i in range(length):
-            sc+=self.blosum62[
-                self.Prtn_Alpha_dict[resd1[i]]+
-                self.Prtn_Alpha_dict[resd2[i]]*self.Prtn_Alpha_length
-                ]
+            sc+=self.HScr[resd1[i]][resd2[i]]
+#            sc+=self.blosum62[
+#                self.Prtn_Alpha_dict[resd1[i]]+
+#                self.Prtn_Alpha_dict[resd2[i]]*self.Prtn_Alpha_length
+#                ]
         return sc
     
     def Gen_Negihbours(self,resd):

@@ -52,18 +52,16 @@ class Hit_Analyzer(object):
         if not self.Tfill and len(self.keys)>=self.Alignment_Count:
             self.Tfill=True
         
-    def Extend_Hit(self,seq,st,resd,Sind):
-        Ex_Hits=[]
-        Nresd=seq[st:st+self.Residue_Length]
+    def Extend_Hit(self,seq,st,resd,Nresd,Sind):
         for RsSt in self.HPS[resd]["Place"]:
             SqSt=st
             SqEnd=st+self.Residue_Length-1
             RsEnd=RsSt+self.Residue_Length-1
-            #Scr=self.myQP.score(seq[SqSt:SqEnd+1], resd) ##Wasted  recalculations , should be improved
             Scr=self.HPS[resd][Nresd]
             """ Left Extension """
             while RsSt>0 and SqSt>0:
-                nScr=self.myQP.score(seq[SqSt-1], self.Request[RsSt-1], 1)
+                #nScr=self.myQP.score(seq[SqSt-1], self.Request[RsSt-1], 1)
+                nScr=self.myQP.HScr[seq[SqSt-1]][self.Request[RsSt-1]]
                 if nScr >=0:
                     SqSt-=1
                     RsSt-=1
@@ -72,7 +70,8 @@ class Hit_Analyzer(object):
                     break
             """ Right Extension """
             while RsEnd<self.ReqLen and SqEnd<self.cSqlLen:
-                nScr=self.myQP.score(seq[SqEnd+1], self.Request[RsEnd+1], 1)
+                #nScr=self.myQP.score(seq[SqEnd+1], self.Request[RsEnd+1], 1)
+                nScr=self.myQP.HScr[seq[SqEnd+1]][self.Request[RsEnd+1]]
                 if  nScr >=0:
                     SqEnd+=1
                     RsEnd+=1
@@ -81,28 +80,17 @@ class Hit_Analyzer(object):
                     break
             
             self.Add_TopHits([RsSt,SqSt,SqEnd,Scr,Sind])
-
-    def Get_Record_Hits_with_HPS(self,seq,resd,word,index):
-        i=0
-        while i <= self.cSqlLen:
-            i = seq.find(resd,i)
-            if  i>=0:
-                """ Extend hit in both ways """
-                self.Extend_Hit(seq, i, word,index)
-                i+=self.Residue_Length
-            else:
-                break
     
     def Get_Recordes_With_Hash(self,seq,index):
         for x in range(len(seq)-2):
             st=seq[x:x+3]
             if st in self.Whash:
-                self.Extend_Hit(seq, x, self.Whash[st],index)
+                self.Extend_Hit(seq, x, self.Whash[st],st,index)
     
     def GetHits(self,seqs):
         for i in range(len(seqs)):
-            if i%400==0:print(i)
-            if i>=4000:return
+            if i%500==0:print(i)
+            #if i>=4000:return
             self.cSqlLen=len(seqs[i])-1
             self.Get_Recordes_With_Hash(seqs[i], i)
 #            for words in self.HPS:
@@ -131,8 +119,8 @@ myQP.Generate_Residue_From_Sequence(req)
 #cProfile.run('myQP.Generate_Residue_From_Sequence(req)')
 print(str(time.clock())+" Query Processed")
 myAnalyzer=Hit_Analyzer(myQP.HSP,myQP.WHash,req)
-#myAnalyzer.GetHits(seqs)
-cProfile.run('myAnalyzer.GetHits(seqs)')
+myAnalyzer.GetHits(seqs)
+#cProfile.run('myAnalyzer.GetHits(seqs)')
 print(str(time.clock())+"  Hits Retrieved")
 #myAnalyzer.Get_Top_Scoring_Alignments()
 print(myAnalyzer.TopHits)
