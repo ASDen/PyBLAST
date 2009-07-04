@@ -72,10 +72,6 @@ class QueryProcessor(object):
         sc=0
         for i in range(length):
             sc+=self.HScr[resd1[i]][resd2[i]]
-#            sc+=self.blosum62[
-#                self.Prtn_Alpha_dict[resd1[i]]+
-#                self.Prtn_Alpha_dict[resd2[i]]*self.Prtn_Alpha_length
-#                ]
         return sc
     
     def Gen_Negihbours(self,resd):

@@ -60,7 +60,6 @@ class Hit_Analyzer(object):
             Scr=self.HPS[resd][Nresd]
             """ Left Extension """
             while RsSt>0 and SqSt>0:
-                #nScr=self.myQP.score(seq[SqSt-1], self.Request[RsSt-1], 1)
                 nScr=self.myQP.HScr[seq[SqSt-1]][self.Request[RsSt-1]]
                 if nScr >=0:
                     SqSt-=1
@@ -70,7 +69,6 @@ class Hit_Analyzer(object):
                     break
             """ Right Extension """
             while RsEnd<self.ReqLen and SqEnd<self.cSqlLen:
-                #nScr=self.myQP.score(seq[SqEnd+1], self.Request[RsEnd+1], 1)
                 nScr=self.myQP.HScr[seq[SqEnd+1]][self.Request[RsEnd+1]]
                 if  nScr >=0:
                     SqEnd+=1
@@ -93,15 +91,10 @@ class Hit_Analyzer(object):
             #if i>=4000:return
             self.cSqlLen=len(seqs[i])-1
             self.Get_Recordes_With_Hash(seqs[i], i)
-#            for words in self.HPS:
-#                for h in self.HPS[words]:
-#                    if h=="Place": continue
-#                    self.Get_Record_Hits_with_HPS(seqs[i], h,words,i)
                         
 print("Started")
 seqs = []
 FR=FASTA_Reader("Mus_musculus.NCBIM30.pep.fa")
-#req="AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGCTTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACTTTAACCAATATAGGCATAGCGCACAGACAGATAAAAATTACAGAGTACACAACATCCATGAAACGCATTAGCACCACCATTACCACCACCATCACCATTACCACAGGTAACGGTGCGGGCTGACGCGTACAGGAAACACAGAAAAAAGCCCGCACCTGACAGTGCGGGCTTTTTTTTTCGACCAAAGGTAACGAGGTAACAACCATGCGAGTGTTGAAGTTCGGCGGTACATCAGTGGCAAATGCAGAACGTTTTCTGCGTGTTGCCGATATTCTGGAAAGCAATGCCAGGCAGGGGCAGGTGGCCACCGTCCTCTCTGCCCCCGCCAAAATCACCAACCACCTGGTGGCGATGATTGAAAAAACCATTAGCGGCCAGGATGCTTTACCCAATATCAGCGATGCCGAACGTATTTTTGCCGAACTTTT"
 req="HEAAAFLVPVLTHRWNRFAVIVQGEEVTLLMDCEEAAYFMSGLLEEGAGEYDARGYAARTEALAAVVVMDNDSAEVRAYVASADFLDKERAGA"
 while True:
     seq=FR.GetNextSequence()
